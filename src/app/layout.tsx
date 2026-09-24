@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EvoHost",
-  description: "EvoHost — hosting, serwery VPS i domeny",
+  description: "EvoHost: hosting serwerów gier. Już wkrótce.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
