@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   displayName,
   formatNumber,
-  formatPrice,
   formatSize,
   getCategories,
   getCategory,
   type Plan,
 } from "@/lib/evohost";
-import { Spotlight } from "@/components/motion";
+import minecraftBg from "../../../../public/hero/minecraft.jpg";
+import discordBotBg from "../../../../public/hero/discord-bot.png";
+import vpsBg from "../../../../public/hero/vps.png";
 
 export async function generateStaticParams() {
   const categories = await getCategories();
@@ -47,6 +48,57 @@ function specs(plan: Plan): [string, string][] {
     ["Domeny", plan.maxDomains ? `${plan.maxDomains}` : null],
   ];
   return rows.filter((r): r is [string, string] => r[1] !== null);
+}
+
+// Tło kart planów dla każdej kategorii. Bez obrazka zostaje sam gradient
+// w kolorach kategorii; nowe grafiki wrzucaj do public/ i dopisuj tutaj.
+const BACKGROUNDS: Record<
+  string,
+  { image?: StaticImageData; position?: string; tint: string }
+> = {
+  minecraft: { image: minecraftBg, tint: "rgb(74 222 128 / 0.18)" },
+  "discord-bot": { image: discordBotBg, tint: "rgb(88 101 242 / 0.3)" },
+  // Ochrona dzieli grafikę z VPS
+  "ochrona-antyddos": {
+    image: vpsBg,
+    position: "100% 0%", // globus i szafy zamiast napisu „VPS”
+    tint: "rgb(56 189 248 / 0.2)",
+  },
+};
+
+function CardBackground({ slug }: { slug: string }) {
+  const bg = BACKGROUNDS[slug];
+  if (!bg) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+      {bg.image && (
+        <Image
+          src={bg.image}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+          className="object-cover opacity-70"
+          style={{ objectPosition: bg.position }}
+        />
+      )}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(120% 70% at 100% 0%, ${bg.tint}, transparent 70%)`,
+        }}
+      />
+      {/* Przyciemnienie ku dołowi, żeby parametry i cena były czytelne */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/70 to-background/95" />
+    </div>
+  );
+}
+
+// Sama kwota bez waluty, np. „29,00”, żeby cyfry mogły mieć własny krój
+function formatAmount(price: number) {
+  return new Intl.NumberFormat("pl-PL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
 }
 
 // „Minecraft 4 GB” → „4 GB”, bo nazwa gry jest już w nagłówku strony
@@ -116,88 +168,57 @@ export default async function CategoryPage({
           W tej kategorii nie ma jeszcze planów.
         </p>
       ) : (
-        <ul className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {category.plans.map((plan, i) => (
             <li
               key={plan.slug}
-              className="fade-up"
+              className={`fade-up relative isolate flex flex-col overflow-hidden rounded-2xl border bg-white/[0.02] p-7 ${
+                plan.isPopular ? "border-white/25" : "border-white/10"
+              }`}
               style={{ animationDelay: `${60 + i * 60}ms` }}
             >
-              <Spotlight
-                className={`isolate flex h-full flex-col overflow-hidden rounded-3xl border p-7 transition-colors duration-300 sm:p-8 ${
-                  plan.isPopular
-                    ? "border-white/25 bg-[radial-gradient(120%_60%_at_50%_0%,rgb(255_255_255/0.07),transparent)]"
-                    : "border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="relative flex flex-1 flex-col">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                      {shortName(plan.name, name)}
-                    </h2>
-                    {plan.isPopular && (
-                      <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-background">
-                        Najpopularniejszy
-                      </span>
-                    )}
+              <CardBackground slug={category.slug} />
+
+              <div className="flex items-center gap-4">
+                {category.imageUrl && (
+                  <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
+                    <Image
+                      src={category.imageUrl}
+                      alt=""
+                      width={56}
+                      height={56}
+                      className="size-7 object-contain"
+                    />
+                  </span>
+                )}
+                <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">
+                  {shortName(plan.name, name)}
+                </h2>
+                {plan.isPopular && (
+                  <span className="ml-auto rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-medium text-background">
+                    Popularny
+                  </span>
+                )}
+              </div>
+
+              <dl className="mt-6 space-y-3 border-t border-white/10 pt-6 text-sm">
+                {specs(plan).map(([label, value]) => (
+                  <div key={label} className="flex gap-2">
+                    <dt className="text-muted">{label}</dt>
+                    <dd className="font-medium text-foreground tabular-nums">
+                      {value}
+                    </dd>
                   </div>
+                ))}
+              </dl>
 
-                  <p className="mt-4 flex items-baseline gap-1.5">
-                    <span className="text-4xl font-semibold tracking-[-0.03em] text-foreground tabular-nums">
-                      {formatPrice(plan.price)}
-                    </span>
-                    <span className="text-sm text-muted">brutto</span>
-                  </p>
-
-                  <dl className="mt-7 grid grid-cols-2 gap-2">
-                    {specs(plan).map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="rounded-2xl bg-white/[0.04] px-4 py-3"
-                      >
-                        <dt className="text-xs text-muted">{label}</dt>
-                        <dd className="mt-1 text-lg font-semibold text-foreground tabular-nums">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-
-                  {plan.features.length > 0 && (
-                    <ul className="mt-6 space-y-2.5 text-sm text-foreground/80">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex gap-2.5">
-                          <svg
-                            viewBox="0 0 16 16"
-                            className="mt-0.5 size-4 shrink-0 text-foreground"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={1.75}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden
-                          >
-                            <path d="M3.5 8.5l3 3 6-7" />
-                          </svg>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  <div className="mt-auto pt-8">
-                    <a
-                      href={plan.orderUrl}
-                      className={`group/btn flex h-12 items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-[transform,opacity,background-color] duration-150 active:scale-[0.97] ${
-                        plan.isPopular
-                          ? "bg-accent text-background hover:opacity-90"
-                          : "bg-white/[0.06] text-foreground hover:bg-white/10"
-                      }`}
-                    >
-                      Zamów
+              {plan.features.length > 0 && (
+                <ul className="mt-5 space-y-2 text-sm text-foreground/80">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex gap-2.5">
                       <svg
                         viewBox="0 0 16 16"
-                        className="size-4 transition-transform duration-150 group-hover/btn:translate-x-0.5"
+                        className="mt-0.5 size-4 shrink-0 text-foreground"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={1.75}
@@ -205,12 +226,46 @@ export default async function CategoryPage({
                         strokeLinejoin="round"
                         aria-hidden
                       >
-                        <path d="M3 8h10M9 4l4 4-4 4" />
+                        <path d="M3.5 8.5l3 3 6-7" />
                       </svg>
-                    </a>
-                  </div>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="mt-auto pt-6">
+                <div className="border-t border-white/10 pt-6">
+                  <p className="text-[11px] font-medium tracking-wider text-muted uppercase">
+                    Cena
+                  </p>
+                  <p className="mt-1 flex items-baseline gap-1.5">
+                    <span className="font-mono text-4xl font-semibold tracking-tight text-foreground tabular-nums">
+                      {formatAmount(plan.price)}
+                    </span>
+                    <span className="text-sm text-muted">zł brutto</span>
+                  </p>
                 </div>
-              </Spotlight>
+
+                <a
+                  href={plan.orderUrl}
+                  className="group mt-6 flex h-12 items-center justify-center gap-2 rounded-xl bg-accent text-[15px] font-semibold text-background transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.98]"
+                >
+                  Zamów
+                  <svg
+                    viewBox="0 0 16 16"
+                    className="size-4 transition-transform duration-150 group-hover:translate-x-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M3 8h10M9 4l4 4-4 4" />
+                  </svg>
+                </a>
+              </div>
             </li>
           ))}
         </ul>
