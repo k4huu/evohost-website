@@ -14,7 +14,6 @@ import {
 import hero from "../../public/hero/minecraft.jpg";
 import mascot from "../../public/discord-mascot.webp";
 import {
-  FloatingMascot,
   ParallaxBackground,
   Reveal,
   Stagger,
@@ -302,7 +301,7 @@ export default async function Home() {
                   Nowości, promocje i pomoc przy konfiguracji. Zapytaj o
                   cokolwiek, zanim zamówisz.
                 </p>
-                <Magnetic className="mt-8">
+                <div className="mt-8">
                   <a
                     href={DISCORD_URL}
                     target="_blank"
@@ -313,17 +312,17 @@ export default async function Home() {
                     Dołącz do serwera
                     <Arrow />
                   </a>
-                </Magnetic>
+                </div>
               </div>
 
-              <FloatingMascot className="mx-auto mt-10 w-60 translate-y-[6%] md:absolute md:right-12 md:bottom-0 md:mt-0 md:w-[22rem] lg:right-20">
+              <div className="mx-auto mt-10 w-60 translate-y-[6%] md:absolute md:right-12 md:bottom-0 md:mt-0 md:w-[22rem] lg:right-20">
                 <Image
                   src={mascot}
                   alt=""
                   sizes="(min-width: 768px) 352px, 240px"
                   className="pointer-events-none drop-shadow-[0_30px_60px_rgb(88_101_242/0.45)]"
                 />
-              </FloatingMascot>
+              </div>
             </div>
           </Spotlight>
         </Reveal>

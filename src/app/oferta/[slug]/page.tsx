@@ -11,6 +11,7 @@ import {
   getCategory,
   type Plan,
 } from "@/lib/evohost";
+import { Spotlight } from "@/components/motion";
 
 export async function generateStaticParams() {
   const categories = await getCategories();
@@ -46,6 +47,14 @@ function specs(plan: Plan): [string, string][] {
     ["Domeny", plan.maxDomains ? `${plan.maxDomains}` : null],
   ];
   return rows.filter((r): r is [string, string] => r[1] !== null);
+}
+
+// „Minecraft 4 GB” → „4 GB”, bo nazwa gry jest już w nagłówku strony
+function shortName(planName: string, categoryName: string) {
+  const prefix = `${categoryName} `.toLocaleLowerCase("pl");
+  return planName.toLocaleLowerCase("pl").startsWith(prefix)
+    ? planName.slice(prefix.length)
+    : planName;
 }
 
 export default async function CategoryPage({
@@ -111,50 +120,84 @@ export default async function CategoryPage({
           {category.plans.map((plan, i) => (
             <li
               key={plan.slug}
-              className={`fade-up relative flex flex-col rounded-2xl border p-6 sm:p-7 ${
-                plan.isPopular
-                  ? "border-white/40 bg-white/[0.03]"
-                  : "border-white/10"
-              }`}
+              className="fade-up"
               style={{ animationDelay: `${60 + i * 60}ms` }}
             >
-              {plan.isPopular && (
-                <span className="absolute -top-3 left-6 rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-background">
-                  Najpopularniejszy
-                </span>
-              )}
-
-              <h2 className="text-lg font-semibold text-foreground">
-                {plan.name}
-              </h2>
-              <p className="mt-3">
-                <span className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
-                  {formatPrice(plan.price)}
-                </span>{" "}
-                <span className="text-sm text-muted">brutto</span>
-              </p>
-
-              <dl className="mt-6 divide-y divide-white/5 border-y border-white/5 text-sm">
-                {specs(plan).map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="flex justify-between gap-4 py-2.5"
-                  >
-                    <dt className="text-muted">{label}</dt>
-                    <dd className="font-medium text-foreground tabular-nums">
-                      {value}
-                    </dd>
+              <Spotlight
+                className={`isolate flex h-full flex-col overflow-hidden rounded-3xl border p-7 transition-colors duration-300 sm:p-8 ${
+                  plan.isPopular
+                    ? "border-white/25 bg-[radial-gradient(120%_60%_at_50%_0%,rgb(255_255_255/0.07),transparent)]"
+                    : "border-white/10 hover:border-white/20"
+                }`}
+              >
+                <div className="relative flex flex-1 flex-col">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      {shortName(plan.name, name)}
+                    </h2>
+                    {plan.isPopular && (
+                      <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-background">
+                        Najpopularniejszy
+                      </span>
+                    )}
                   </div>
-                ))}
-              </dl>
 
-              {plan.features.length > 0 && (
-                <ul className="mt-5 space-y-2 text-sm text-muted">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex gap-2.5">
+                  <p className="mt-4 flex items-baseline gap-1.5">
+                    <span className="text-4xl font-semibold tracking-[-0.03em] text-foreground tabular-nums">
+                      {formatPrice(plan.price)}
+                    </span>
+                    <span className="text-sm text-muted">brutto</span>
+                  </p>
+
+                  <dl className="mt-7 grid grid-cols-2 gap-2">
+                    {specs(plan).map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-2xl bg-white/[0.04] px-4 py-3"
+                      >
+                        <dt className="text-xs text-muted">{label}</dt>
+                        <dd className="mt-1 text-lg font-semibold text-foreground tabular-nums">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  {plan.features.length > 0 && (
+                    <ul className="mt-6 space-y-2.5 text-sm text-foreground/80">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex gap-2.5">
+                          <svg
+                            viewBox="0 0 16 16"
+                            className="mt-0.5 size-4 shrink-0 text-foreground"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.75}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden
+                          >
+                            <path d="M3.5 8.5l3 3 6-7" />
+                          </svg>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="mt-auto pt-8">
+                    <a
+                      href={plan.orderUrl}
+                      className={`group/btn flex h-12 items-center justify-center gap-2 rounded-full text-[15px] font-medium transition-[transform,opacity,background-color] duration-150 active:scale-[0.97] ${
+                        plan.isPopular
+                          ? "bg-accent text-background hover:opacity-90"
+                          : "bg-white/[0.06] text-foreground hover:bg-white/10"
+                      }`}
+                    >
+                      Zamów
                       <svg
                         viewBox="0 0 16 16"
-                        className="mt-0.5 size-4 shrink-0 text-foreground"
+                        className="size-4 transition-transform duration-150 group-hover/btn:translate-x-0.5"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={1.75}
@@ -162,26 +205,12 @@ export default async function CategoryPage({
                         strokeLinejoin="round"
                         aria-hidden
                       >
-                        <path d="M3.5 8.5l3 3 6-7" />
+                        <path d="M3 8h10M9 4l4 4-4 4" />
                       </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="mt-auto pt-7">
-                <a
-                  href={plan.orderUrl}
-                  className={`flex h-11 items-center justify-center rounded-full text-sm font-medium transition-[transform,opacity,background-color] duration-150 active:scale-[0.97] ${
-                    plan.isPopular
-                      ? "bg-accent text-background hover:opacity-90"
-                      : "border border-white/15 text-foreground hover:bg-white/5"
-                  }`}
-                >
-                  Zamów
-                </a>
-              </div>
+                    </a>
+                  </div>
+                </div>
+              </Spotlight>
             </li>
           ))}
         </ul>

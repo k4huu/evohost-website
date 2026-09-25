@@ -128,56 +128,6 @@ export function ParallaxBackground({ children }: { children: ReactNode }) {
   );
 }
 
-/** Maskotka: unosi się w miejscu i przechyla za kursorem. */
-export function FloatingMascot({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [-12, 12]), {
-    stiffness: 150,
-    damping: 15,
-  });
-  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [10, -10]), {
-    stiffness: 150,
-    damping: 15,
-  });
-
-  return (
-    <motion.div
-      ref={ref}
-      className={className}
-      style={{ rotateX, rotateY, transformPerspective: 800 }}
-      onPointerMove={(e) => {
-        const rect = ref.current?.getBoundingClientRect();
-        if (!rect) return;
-        mx.set((e.clientX - rect.left) / rect.width - 0.5);
-        my.set((e.clientY - rect.top) / rect.height - 0.5);
-      }}
-      onPointerLeave={() => {
-        mx.set(0);
-        my.set(0);
-      }}
-      initial={{ opacity: 0, y: 60, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ type: "spring", stiffness: 90, damping: 14 }}
-    >
-      <motion.div
-        animate={{ y: [0, -14, 0] }}
-        transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-      >
-        {children}
-      </motion.div>
-    </motion.div>
-  );
-}
-
 /** Kafelek, który lekko unosi się pod kursorem. */
 export function Lift({
   children,
