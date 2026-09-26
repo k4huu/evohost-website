@@ -7,11 +7,15 @@ import {
   getCategories,
   getPlans,
 } from "@/lib/evohost";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Oferta | EvoHost",
-  description: "Serwery Minecraft i ochrona AntyDDoS od EvoHost.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Oferta",
+  description:
+    "Cennik EvoHost: serwery Minecraft, hosting botów Discord i ochrona AntyDDoS. Porównaj plany i zamów w kilka minut.",
+  path: "/oferta",
+});
 
 export default async function OfertaPage() {
   const [categories, plans] = await Promise.all([getCategories(), getPlans()]);
@@ -26,6 +30,24 @@ export default async function OfertaPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-16 sm:px-10 sm:py-20">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "EvoHost", path: "/" },
+            { name: "Oferta", path: "/oferta" },
+          ]),
+          {
+            "@type": "ItemList",
+            name: "Oferta EvoHost",
+            itemListElement: categories.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: displayName(c.name),
+              url: absoluteUrl(`/oferta/${c.slug}`),
+            })),
+          },
+        ]}
+      />
       <h1 className="fade-up text-4xl font-semibold tracking-[-0.03em] text-accent sm:text-5xl">
         Oferta
       </h1>

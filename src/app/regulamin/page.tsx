@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { pageMetadata } from "@/lib/site";
 
 // Dane usługodawcy — zmień tutaj, a zaktualizują się w całym regulaminie.
 const BRAND = "EvoHost";
@@ -9,10 +10,11 @@ const ADDRESS = "Obrońców Mławy 3";
 const EMAIL = "kontakt@evohost.pl";
 const EFFECTIVE_DATE = "21 sierpnia 2026 r.";
 
-export const metadata: Metadata = {
-  title: `Regulamin | ${BRAND}`,
-  description: `Regulamin świadczenia usług drogą elektroniczną przez ${DOMAIN}`,
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Regulamin",
+  description: `Regulamin świadczenia usług drogą elektroniczną przez ${BRAND} (${DOMAIN}): zamówienia, płatności, reklamacje i odstąpienie od umowy.`,
+  path: "/regulamin",
+});
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (

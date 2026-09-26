@@ -2,14 +2,23 @@ import type { Metadata } from "next";
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/json-ld";
 import {
   displayName,
   formatNumber,
+  formatPrice,
   formatSize,
   getCategories,
   getCategory,
+  type Category,
   type Plan,
 } from "@/lib/evohost";
+import {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  ORGANIZATION_ID,
+  SITE_NAME,
+} from "@/lib/site";
 import minecraftBg from "../../../../public/hero/minecraft.jpg";
 import discordBotBg from "../../../../public/hero/discord-bot.png";
 import vpsBg from "../../../../public/hero/vps.png";
@@ -24,10 +33,42 @@ export async function generateMetadata({
 }: PageProps<"/oferta/[slug]">): Promise<Metadata> {
   const category = await getCategory((await params).slug);
   if (!category) return {};
+  const title = `${displayName(category.name)}: ${category.typeLabel}`;
+  const description = describe(category);
+  const path = `/oferta/${category.slug}`;
+  // Obrazek dokłada opengraph-image.tsx z tego folderu
   return {
-    title: `${displayName(category.name)} | EvoHost`,
-    description: category.description ?? undefined,
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      locale: "pl_PL",
+      url: path,
+      siteName: SITE_NAME,
+      title: `${title} | ${SITE_NAME}`,
+      description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | ${SITE_NAME}`,
+      description,
+    },
   };
+}
+
+// Opis do wyszukiwarki: z panelu, a gdy go brak, złożony z ceny i sprzętu
+function describe(category: Category & { plans: Plan[] }) {
+  if (category.description) return category.description;
+  const name = displayName(category.name);
+  const prices = category.plans.map((p) => p.price);
+  return [
+    `${name} w EvoHost: ${category.typeLabel.toLocaleLowerCase("pl")}`,
+    prices.length ? ` od ${formatPrice(Math.min(...prices))} miesięcznie` : "",
+    ".",
+    category.hardware.summary ? ` ${category.hardware.summary}.` : "",
+    " Zamów w panelu klienta i płać BLIK-iem, kartą lub przelewem.",
+  ].join("");
 }
 
 // Specyfikacja planu jako pary etykieta–wartość; pomija pola, których usługa nie ma
@@ -116,9 +157,50 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const name = displayName(category.name);
+  const url = absoluteUrl(`/oferta/${category.slug}`);
+  const prices = category.plans.map((p) => p.price);
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-16 sm:px-10 sm:py-20">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "EvoHost", path: "/" },
+            { name: "Oferta", path: "/oferta" },
+            { name, path: `/oferta/${category.slug}` },
+          ]),
+          ...(prices.length > 0
+            ? [
+                {
+                  "@type": "Product",
+                  "@id": `${url}#product`,
+                  name: `${name}: ${category.typeLabel}`,
+                  description: describe(category),
+                  url,
+                  ...(category.imageUrl && { image: category.imageUrl }),
+                  category: category.typeLabel,
+                  brand: { "@type": "Brand", name: SITE_NAME },
+                  offers: {
+                    "@type": "AggregateOffer",
+                    priceCurrency: "PLN",
+                    lowPrice: Math.min(...prices),
+                    highPrice: Math.max(...prices),
+                    offerCount: prices.length,
+                    offers: category.plans.map((plan) => ({
+                      "@type": "Offer",
+                      name: plan.name,
+                      price: plan.price,
+                      priceCurrency: plan.currency,
+                      availability: "https://schema.org/InStock",
+                      url: plan.orderUrl,
+                      seller: { "@id": ORGANIZATION_ID },
+                    })),
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
       <Link
         href="/oferta"
         className="group -ml-1 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"

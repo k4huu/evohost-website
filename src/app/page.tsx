@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -24,6 +25,12 @@ import {
   WordReveal,
 } from "@/components/motion";
 import { Faq } from "@/components/faq";
+import { JsonLd } from "@/components/json-ld";
+
+// Tytuł i opis bierze z layoutu; tu tylko adres kanoniczny strony głównej
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // Odpowiedzi oparte na regulaminie — przy zmianie regulaminu zaktualizuj też tutaj
 const FAQ = [
@@ -85,6 +92,16 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@type": "FAQPage",
+          mainEntity: FAQ.map(({ q, a }) => ({
+            "@type": "Question",
+            name: q,
+            acceptedAnswer: { "@type": "Answer", text: a },
+          })),
+        }}
+      />
       {/* -mt-20 wsuwa hero pod przezroczysty navbar (h-20) */}
       <section className="relative isolate -mt-20 flex min-h-[min(100svh,960px)] flex-col overflow-hidden">
         <ParallaxBackground>

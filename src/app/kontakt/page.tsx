@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/site";
 
 const EMAIL = "kontakt@evohost.pl";
 
-export const metadata: Metadata = {
-  title: "Kontakt | EvoHost",
-  description: "Skontaktuj się z EvoHost.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Kontakt",
+  description:
+    "Skontaktuj się z EvoHost: pytania o ofertę, zamówienia i współpracę. Napisz na kontakt@evohost.pl albo dołącz do naszego Discorda.",
+  path: "/kontakt",
+});
 
 export default function KontaktPage() {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-20 sm:px-10">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "EvoHost", path: "/" },
+          { name: "Kontakt", path: "/kontakt" },
+        ])}
+      />
       <h1 className="fade-up text-4xl font-semibold tracking-[-0.03em] text-accent sm:text-5xl">
         Kontakt
       </h1>
