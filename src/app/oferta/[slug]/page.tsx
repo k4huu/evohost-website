@@ -57,9 +57,11 @@ export async function generateMetadata({
   };
 }
 
-// Opis do wyszukiwarki: z panelu, a gdy go brak, złożony z ceny i sprzętu
+// Opis do wyszukiwarki: z panelu, a gdy jest za krótki (np. „Serwery minecraft”),
+// złożony z ceny i sprzętu
 function describe(category: Category & { plans: Plan[] }) {
-  if (category.description) return category.description;
+  if (category.description && category.description.length >= 80)
+    return category.description;
   const name = displayName(category.name);
   const prices = category.plans.map((p) => p.price);
   return [
