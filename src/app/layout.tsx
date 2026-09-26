@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
-import { MotionProvider } from "@/components/motion";
 import { Navbar, type OfferItem } from "@/components/navbar";
 import { displayName, getCategories } from "@/lib/evohost";
 import {
@@ -95,11 +94,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
-        <MotionProvider>
-          <Navbar offer={offer} />
-          {children}
-          <Footer categories={categories} />
-        </MotionProvider>
+        <Navbar offer={offer} />
+        {children}
+        <Footer categories={categories} />
       </body>
     </html>
   );

@@ -229,7 +229,7 @@ export default async function CategoryPage({
             alt=""
             width={80}
             height={80}
-            priority
+            loading="eager"
             className="size-20 object-contain"
           />
         )}

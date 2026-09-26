@@ -108,7 +108,8 @@ export default async function Home() {
           <Image
             src={hero}
             alt=""
-            priority
+            loading="eager"
+            fetchPriority="high"
             placeholder="blur"
             sizes="100vw"
             className="size-full object-cover object-[65%_center]"

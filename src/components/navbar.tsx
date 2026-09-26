@@ -94,7 +94,7 @@ export function Navbar({ offer }: { offer: OfferItem[] }) {
             alt="EvoHost"
             width={1193}
             height={232}
-            priority
+            loading="eager"
             className="h-auto w-[136px]"
           />
         </Link>
